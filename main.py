@@ -38,7 +38,6 @@ def create_toroidal(k):
 
 def your_harmonic_function(Graph, label_name):
     # YOUR CODE HERE
-    x = nx.spring_layout(G, iterations=200)
     weights = {}
     for edge in Graph.edges:
         weights[edge] = 1
@@ -69,12 +68,16 @@ def your_harmonic_function(Graph, label_name):
             try:
                 Wul[row][column] = weights[(u_index, l_index)]
             except KeyError:
-                pass
+                try:
+                    Wul[row][column] = weights[(l_index, u_index)]
+                except KeyError:
+                    pass
             column += 1
         column = 0
         for u_index2 in fu_list:
             try:
                 Wuu[row][column] = weights[(u_index, u_index2)]
+                Wuu[column][row] = weights[(u_index, u_index2)]
             except KeyError:
                 pass
             column += 1
