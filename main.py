@@ -40,8 +40,16 @@ def your_harmonic_function(Graph, label_name):
     # YOUR CODE HERE
     x = nx.spring_layout(G, iterations=200)
     weights = {}
-    for edge in Graph.edges:
-        weights[edge] = 1
+    max_dist = 0
+    for key in Graph.nodes:
+        shortest_path = nx.algorithms.shortest_path(Graph, key)
+        for dest in shortest_path:
+            weight = math.exp(-len(shortest_path[dest]))
+            weights[(key, dest)] = weight
+            if weight > max_dist:
+                max_dist = weight
+    for key_pair in weights:
+        weights[key_pair] /= max_dist
     fu = {}
     fl = {}
     uniq_labeles = {}
