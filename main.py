@@ -44,11 +44,11 @@ def your_harmonic_function(Graph, label_name):
     weights = {}
     sigma = []
     for i in range(dims):
-        max_v = x[existing_key][i]
-        for k in x:
-            if x[k][i] > max_v:
-                max_v = x[k][i]
-        sigma.append(max_v)
+        max_d = 0
+        for edge in Graph.edges:
+            if (x[edge[0]][i] - x[edge[1]][i])**2 > max_d:
+                max_d = (x[edge[0]][i] - x[edge[1]][i])**2
+        sigma.append(max_d)
     for edge in Graph.edges:
         weight = 0
         for i in range(dims):
