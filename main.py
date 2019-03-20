@@ -2,6 +2,7 @@ import networkx as nx
 from networkx.algorithms import node_classification
 import numpy as np
 import pandas as pd
+import math
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_recall_fscore_support
@@ -35,10 +36,80 @@ def create_toroidal(k):
         G.add_edge(mapping2[(i,j)],mapping2[i+k-1,j])
     return G
 
-def your_harmonic_function(Graph, label):
+def your_harmonic_function(Graph, label_name):
     # YOUR CODE HERE
-    labeled_list = 0
-    return labeled_list
+    x = nx.spring_layout(G, iterations=200)
+    existing_key = 0
+    dims = len(x[existing_key])
+    weights = {}
+    sigma = []
+    for i in range(dims):
+        max_v = x[existing_key][i]
+        for k in x:
+            if x[k][i] > max_v:
+                max_v = x[k][i]
+        sigma.append(max_v)
+    for edge in Graph.edges:
+        weight = 0
+        for i in range(dims):
+            weight += ((x[edge[0]][i] - x[edge[1]][i])**2)/sigma[i]
+        weights[edge] = math.exp(-weight)
+    fu = {}
+    fl = {}
+    uniq_labeles = {}
+    uniq_labeles_n = 0
+    uniq_labeles_inverse = []
+    for key in Graph.nodes:
+        try:
+            label = Graph.node[key][label_name]
+            if label not in uniq_labeles:
+                uniq_labeles[label] = uniq_labeles_n
+                uniq_labeles_inverse.append(label)
+                uniq_labeles_n += 1
+            fl[key] = uniq_labeles[label]
+        except KeyError:
+            fu[key] = ""
+    fu_list = [key for key in fu]
+    fl_list = [key for key in fl]
+    Duu = np.zeros((len(fu), len(fu)))
+    Wuu = np.zeros((len(fu), len(fu)))
+    Wul = np.zeros((len(fu), len(fl)))
+    row = 0
+    for u_index in fu_list:
+        column = 0
+        for l_index in fl_list:
+            try:
+                Wul[row][column] = weights[(u_index, l_index)]
+            except KeyError:
+                pass
+            column += 1
+        column = 0
+        for u_index2 in fu_list:
+            try:
+                Wuu[row][column] = weights[(u_index, u_index2)]
+            except KeyError:
+                pass
+            column += 1
+        row += 1
+    for row in range(len(fu)):
+        sum = 0
+        for column in range(len(fu)):
+            sum += Wuu[row][column]
+        for column in range(len(fl)):
+            sum += Wul[row][column]
+        Duu[row][row] = sum
+    fl_values = np.array([fl[key] for key in fl_list])
+    fu_values = np.dot(np.dot(np.linalg.inv(Duu - Wuu), Wul), fl_values)
+    for row in range(len(fu_values)):
+        fu[fu_list[row]] = fu_values[row]
+    labeled_list = []
+    for i in range(len(fu) + len(fl)):
+        try:
+            labeled_list.append(fl[i])
+        except KeyError:
+            labeled_list.append(fu[i])
+
+    return [uniq_labeles_inverse[int(round(value))] for value in labeled_list]
 
 
 G = create_toroidal(16)
@@ -57,5 +128,5 @@ for n in G.nodes:
         G.node[n]['label'] = node_color[n]
 predicted = your_harmonic_function(G, label_name='label')
 
-confusion_matrix(node_color, predicted)
-precision_recall_fscore_support(node_color, predicted)
+print(confusion_matrix(node_color, predicted))
+print(precision_recall_fscore_support(node_color, predicted))
