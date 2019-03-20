@@ -39,21 +39,9 @@ def create_toroidal(k):
 def your_harmonic_function(Graph, label_name):
     # YOUR CODE HERE
     x = nx.spring_layout(G, iterations=200)
-    existing_key = 0
-    dims = len(x[existing_key])
     weights = {}
-    sigma = []
-    for i in range(dims):
-        max_d = 0
-        for edge in Graph.edges:
-            if (x[edge[0]][i] - x[edge[1]][i])**2 > max_d:
-                max_d = (x[edge[0]][i] - x[edge[1]][i])**2
-        sigma.append(max_d)
     for edge in Graph.edges:
-        weight = 0
-        for i in range(dims):
-            weight += ((x[edge[0]][i] - x[edge[1]][i])**2)/sigma[i]
-        weights[edge] = math.exp(-weight)
+        weights[edge] = 1
     fu = {}
     fl = {}
     uniq_labeles = {}
